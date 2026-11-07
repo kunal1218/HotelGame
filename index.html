@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#14231f" />
+  <meta name="description" content="Step inside Meridian. A beautifully detailed, first-person apartment lobby built in Three.js." />
+  <title>Meridian — A space to slow down</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+  <main id="app">
+    <canvas id="scene" aria-label="Interactive three dimensional apartment lobby"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Meridian home"><span class="monogram">m<span>·</span></span><span class="brand-copy">MERIDIAN<small>R E S I D E N C E S</small></span></a>
+      <div class="scene-label"><span class="live-dot"></span> A SPACE TO SLOW DOWN <span class="divider">/</span> <span>01 — THE LOBBY</span></div>
+      <nav class="toolbar" aria-label="Scene controls">
+        <button id="time-toggle" class="time-button" aria-label="Switch to blue hour"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span id="time-name">Golden hour</span></button>
+        <button id="audio-toggle" class="icon-button" aria-label="Enable ambient sound" title="Ambient sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4L5 9H2v6h3l6 5zM16 8a6 6 0 010 8m3-11a10 10 0 010 14"/><path id="audio-slash" d="M3 3l18 18"/></svg></button>
+        <button id="help-button" class="icon-button" aria-label="Show controls" title="Controls"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 115 0c0 2-2.5 2-2.5 4M12 16v1"/></svg></button>
+      </nav>
+    </header>
+    <section id="welcome" class="welcome">
+      <div class="eyebrow"><span></span> WELCOME TO MERIDIAN</div>
+      <h1>Some places<br>feel like <em>home.</em></h1>
+      <p>Leave the city at the door.<br>A little warmth. A little wonder. All yours to explore.</p>
+      <button id="start-button" class="primary-button">Step inside <span>↗</span></button>
+      <div class="intro-controls"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move</span><span class="mouse-icon"></span><span>Mouse to look</span></div>
+    </section>
+    <aside id="location-card" class="location-card">
+      <div class="card-kicker">YOU ARE HERE <span>↗</span></div>
+      <div class="location-title">The Grand Lobby<small>GROUND FLOOR · MERIDIAN</small></div>
+      <svg class="floorplan" viewBox="0 0 200 145" aria-label="Lobby floor plan with your position">
+        <path class="plan-wall" d="M20 119V17h160v102h-63m-34 0H20M20 17h160"/>
+        <path class="plan-line" d="M71 17v13h42V17M120 17v32h60M143 74h37M20 83h33v36M20 48h29"/>
+        <rect class="plan-furniture" x="31" y="46" width="13" height="29" rx="4"/><rect class="plan-furniture" x="55" y="52" width="12" height="18" rx="5"/><ellipse class="plan-furniture" cx="49" cy="62" rx="5" ry="7"/>
+        <rect class="plan-furniture" x="134" y="34" width="27" height="10" rx="2"/>
+        <path class="plan-line" d="M157 83h23m-23 5h23m-23 5h23m-23 5h23m-23 5h23"/>
+        <g id="map-player"><path d="M0 -13L-7 1 7 1z" fill="#bfca98" opacity=".28"/><circle r="4" fill="#dce9b9"/><circle r="8" fill="none" stroke="#dce9b9" opacity=".3"/></g>
+        <text x="100" y="140" text-anchor="middle">ENTRANCE</text>
+      </svg>
+      <div class="card-bottom"><span class="live-dot"></span><span id="scene-status">A moment of calm, in real time.</span></div>
+    </aside>
+    <div id="crosshair" class="crosshair hidden" aria-hidden="true"><i></i><i></i></div>
+    <div id="interaction" class="interaction hidden"><kbd>E</kbd><span id="interaction-label">Discover</span></div>
+    <div id="explore-hud" class="explore-hud hidden"><span class="live-dot"></span><span>FREE EXPLORATION</span><i></i><span><kbd>Shift</kbd> walk faster</span><span><kbd>Esc</kbd> pause</span></div>
+    <div class="bottomline"><span>DESIGNED FOR THE EVERYDAY EXTRAORDINARY.</span><span id="discovery-count">FIND YOUR FAVOURITE CORNER <span>✳</span></span><span class="render-status"><span class="live-dot"></span> <span id="fps">THREE.JS</span> <span class="render-tag">REAL-TIME 3D</span></span></div>
+    <section id="pause-panel" class="pause-panel hidden" aria-label="Exploration paused"><div class="eyebrow">TAKE YOUR TIME</div><h2>Stay a little longer.</h2><p>Your corner of the city is right here.</p><button id="resume-button" class="primary-button">Keep exploring <span>↗</span></button><button id="reset-button" class="text-button">Back to the entrance</button></section>
+    <dialog id="help-dialog"><button class="dialog-close" aria-label="Close controls">×</button><div class="eyebrow">MAKE YOURSELF AT HOME</div><h2>A little guidance.</h2><div class="control-row"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys</span><span>Move</span></div><div class="control-row"><span>Mouse / drag</span><span>Look around</span></div><div class="control-row"><span><kbd>Shift</kbd></span><span>Walk faster</span></div><div class="control-row"><span><kbd>E</kbd></span><span>Discover a detail</span></div><div class="control-row"><span><kbd>Esc</kbd></span><span>Pause</span></div><p>Find five thoughtful details around the lobby. Get close to an object and press E to discover its story.</p><p class="touch-note">On touch screens, use the left stick to move and drag the right side to look. Tap a discovery prompt to interact.</p></dialog>
+    <aside id="detail-card" class="detail-card hidden"><button id="close-detail" aria-label="Close detail">×</button><div id="detail-kicker" class="eyebrow">A MERIDIAN DETAIL</div><h2 id="detail-title"></h2><p id="detail-description"></p><span id="detail-progress"></span></aside>
+    <div id="toast" class="toast hidden" role="status"></div>
+    <div id="mobile-controls" class="mobile-controls hidden"><div id="joystick"><div id="joystick-knob"></div></div><button id="mobile-interact" aria-label="Interact">E</button><button id="mobile-pause" aria-label="Pause">Ⅱ</button></div>
+    <div id="loader" class="loader"><div class="loader-monogram">m.</div><span>MAKING ROOM FOR YOU</span><div class="load-track"><i></i></div></div>
+    <div id="error" class="error hidden"><h2>A little more graphics power is needed.</h2><p>This experience needs a browser with WebGL 2 enabled. Try a current desktop browser with hardware acceleration turned on.</p></div>
+  </main>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

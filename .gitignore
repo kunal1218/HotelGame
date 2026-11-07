@@ -1,0 +1,4 @@
+node_modules/
+dist/
+.openai/*.json.tmp
+.DS_Store
