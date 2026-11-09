@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { MAP, Level } from './shared/sim/map.js';
+import { canOccupy } from './shared/sim/collision.js';
+import { createMotionDriver } from './shared/sim/motionDriver.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 /** Small reusable rendering engine: lifecycle, lighting, resizing and collision-aware camera. */
@@ -72,8 +75,8 @@ export class ApartmentEngine {
       this.elapsed += dt;
       this.controller.update(dt, this.elapsed);
       this.updaters.forEach(fn => fn(this.elapsed, dt));
-      this.renderer.render(this.scene, this.camera);
       onFrame?.(dt, this.elapsed);
+      this.renderer.render(this.scene, this.camera);
     });
   }
   dispose() {
@@ -93,7 +96,10 @@ export class ApartmentEngine {
 export class FirstPersonController {
   constructor(camera, canvas) {
     this.camera = camera; this.canvas = canvas;
-    this.active = false; this.keys = new Set(); this.colliders = [];
+    this.active = false; this.keys = new Set();
+    this.level = MAP[Level.LOBBY];
+    this.motion = createMotionDriver(this.level, camera.position);
+    this.onTick = null; this.runWhileInactive = false;
     this.velocity = new THREE.Vector2(); this.moveInput = new THREE.Vector2();
     this.radius = .32; this.eyeHeight = 1.72;
     this.yaw = camera.rotation.y; this.pitch = camera.rotation.x;
@@ -149,47 +155,38 @@ export class FirstPersonController {
   }
   look(dx,dy) { this.yaw -= dx*.002; this.pitch = THREE.MathUtils.clamp(this.pitch-dy*.002,-1.35,1.35); }
   setActive(active) {
-    this.active=active; this.keys.clear(); this.velocity.set(0,0); this.moveInput.set(0,0);
+    this.active=active; this.keys.clear(); this.velocity.set(0,0); this.moveInput.set(0,0); this.motion.stop();
     if (!active && document.pointerLockElement) document.exitPointerLock();
   }
-  canOccupy(x,z) {
-    if (x < -13.35 || x > 13.35 || z < -13.2 || z > 13.1) return false;
-    for (const c of this.colliders) {
-      const nearestX = THREE.MathUtils.clamp(x,c.minX,c.maxX);
-      const nearestZ = THREE.MathUtils.clamp(z,c.minZ,c.maxZ);
-      if ((x-nearestX)**2+(z-nearestZ)**2 < this.radius**2) return false;
-    }
-    return true;
+  canOccupy(x,z) { return canOccupy(this.level,x,z,this.radius); }
+  teleport(position) {
+    this.motion.reset(position);this.camera.position.set(position.x,this.eyeHeight,position.z);this.velocity.set(0,0);
   }
   update(dt,time) {
-    if (!this.active) return;
+    if (!this.active && !this.runWhileInactive) return;
     let x=0,z=0;
-    if (this.keys.has('KeyW')||this.keys.has('ArrowUp')) z-=1;
-    if (this.keys.has('KeyS')||this.keys.has('ArrowDown')) z+=1;
-    if (this.keys.has('KeyA')||this.keys.has('ArrowLeft')) x-=1;
-    if (this.keys.has('KeyD')||this.keys.has('ArrowRight')) x+=1;
-    x+=this.moveInput.x; z+=this.moveInput.y;
-    const length=Math.hypot(x,z); if (length>1) {x/=length;z/=length;}
-    const speed=this.keys.has('ShiftLeft')||this.keys.has('ShiftRight') ? 4.4 : 2.6;
-    const tx=(x*Math.cos(this.yaw)+z*Math.sin(this.yaw))*speed;
-    const tz=(-x*Math.sin(this.yaw)+z*Math.cos(this.yaw))*speed;
-    const damping=1-Math.exp(-12*dt);
-    this.velocity.x=THREE.MathUtils.lerp(this.velocity.x,tx,damping);
-    this.velocity.y=THREE.MathUtils.lerp(this.velocity.y,tz,damping);
-    // Substeps prevent walking through thin objects on slower devices.
-    const steps=Math.max(1,Math.ceil(this.velocity.length()*dt/.08));
-    for(let i=0;i<steps;i++){
-      const nx=this.camera.position.x+this.velocity.x*dt/steps;
-      if(this.canOccupy(nx,this.camera.position.z))this.camera.position.x=nx;
-      const nz=this.camera.position.z+this.velocity.y*dt/steps;
-      if(this.canOccupy(this.camera.position.x,nz))this.camera.position.z=nz;
+    if(this.active){
+      if(this.keys.has('KeyW')||this.keys.has('ArrowUp'))z-=1;
+      if(this.keys.has('KeyS')||this.keys.has('ArrowDown'))z+=1;
+      if(this.keys.has('KeyA')||this.keys.has('ArrowLeft'))x-=1;
+      if(this.keys.has('KeyD')||this.keys.has('ArrowRight'))x+=1;
+      x+=this.moveInput.x;z+=this.moveInput.y;
     }
-    const moving=this.velocity.length()>.15;
-    const bob=matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : Math.sin(time*(speed>3?12:9))*.016*Math.min(this.velocity.length(),1);
-    this.camera.position.y=this.eyeHeight+(moving?bob:0);
+    const length=Math.hypot(x,z);if(length>1){x/=length;z/=length;}
+    const sprint=this.active&&(this.keys.has('ShiftLeft')||this.keys.has('ShiftRight'));
+    const input={mx:x,mz:z,sprint,yaw:this.yaw,pitch:this.pitch};
+    const state=this.motion.advance(dt,input,(state,command)=>this.onTick?.(state,command));
+    this.velocity.set(state.vx,state.vz);
+    const speed=this.velocity.length();
+    const bob=matchMedia('(prefers-reduced-motion: reduce)').matches?0:Math.sin(time*(sprint?12:9))*.016*Math.min(speed,1);
+    this.camera.position.set(state.x,this.eyeHeight+(speed>.15?bob:0),state.z);
     this.camera.rotation.set(this.pitch,this.yaw,0,'YXZ');
   }
-  reset() {this.camera.position.set(3,this.eyeHeight,10.5);this.camera.lookAt(-2,2.15,-5);this.yaw=this.camera.rotation.y;this.pitch=this.camera.rotation.x;this.velocity.set(0,0);}
+  reset() {
+    this.teleport(this.level.spawn);this.camera.lookAt(-2,2.15,-5);
+    this.yaw=this.camera.rotation.y;this.pitch=this.camera.rotation.x;
+    this.keys.clear();this.moveInput.set(0,0);
+  }
   dispose() {
     removeEventListener('keydown',this.onKeyDown);removeEventListener('keyup',this.onKeyUp);
     removeEventListener('blur',this.onBlur);document.removeEventListener('pointerlockchange',this.onLock);

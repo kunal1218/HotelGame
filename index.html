@@ -25,7 +25,14 @@
       <div class="eyebrow"><span></span> WELCOME TO MERIDIAN</div>
       <h1>Some places<br>feel like <em>home.</em></h1>
       <p>Leave the city at the door.<br>A little warmth. A little wonder. All yours to explore.</p>
-      <button id="start-button" class="primary-button">Step inside <span>↗</span></button>
+      <div class="room-entry">
+        <label for="player-name">Your name</label><input id="player-name" maxlength="16" autocomplete="nickname" value="Guest" />
+        <p class="friends-note">Best with 2–5 friends</p>
+        <div class="room-actions"><button id="create-room" class="primary-button">Create room <span>↗</span></button><button id="join-room" class="primary-button">Join with code</button></div>
+        <form id="join-form" class="hidden"><label for="room-code">Room code</label><div class="code-entry"><input id="room-code" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="QXJT" /><button id="join-submit" class="primary-button" type="submit">Join room</button></div></form>
+        <button id="solo-button" class="text-button">Explore alone</button>
+        <p id="connection-status" role="status" aria-live="polite"></p><button id="retry-button" class="text-button hidden">Retry</button>
+      </div>
       <div class="intro-controls"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to move</span><span class="mouse-icon"></span><span>Mouse to look</span></div>
     </section>
     <aside id="location-card" class="location-card">
@@ -44,9 +51,9 @@
     </aside>
     <div id="crosshair" class="crosshair hidden" aria-hidden="true"><i></i><i></i></div>
     <div id="interaction" class="interaction hidden"><kbd>E</kbd><span id="interaction-label">Discover</span></div>
-    <div id="explore-hud" class="explore-hud hidden"><span class="live-dot"></span><span>FREE EXPLORATION</span><i></i><span><kbd>Shift</kbd> walk faster</span><span><kbd>Esc</kbd> pause</span></div>
+    <div id="explore-hud" class="explore-hud hidden"><span class="live-dot"></span><span id="session-status">FREE EXPLORATION</span><i></i><span><kbd>Shift</kbd> walk faster</span><span><kbd>Esc</kbd> pause</span></div>
     <div class="bottomline"><span>DESIGNED FOR THE EVERYDAY EXTRAORDINARY.</span><span id="discovery-count">FIND YOUR FAVOURITE CORNER <span>✳</span></span><span class="render-status"><span class="live-dot"></span> <span id="fps">THREE.JS</span> <span class="render-tag">REAL-TIME 3D</span></span></div>
-    <section id="pause-panel" class="pause-panel hidden" aria-label="Exploration paused"><div class="eyebrow">TAKE YOUR TIME</div><h2>Stay a little longer.</h2><p>Your corner of the city is right here.</p><button id="resume-button" class="primary-button">Keep exploring <span>↗</span></button><button id="reset-button" class="text-button">Back to the entrance</button></section>
+    <section id="pause-panel" class="pause-panel hidden" aria-label="Exploration paused"><div class="eyebrow">TAKE YOUR TIME</div><h2>Stay a little longer.</h2><p>The hotel keeps going while your menu is open.</p><p id="room-label"></p><button id="invite-button" class="text-button">Invite friends</button><button id="resume-button" class="primary-button">Keep exploring <span>↗</span></button><button id="reset-button" class="text-button">Back to the entrance</button><button id="leave-button" class="text-button">Leave room</button></section>
     <dialog id="help-dialog"><button class="dialog-close" aria-label="Close controls">×</button><div class="eyebrow">MAKE YOURSELF AT HOME</div><h2>A little guidance.</h2><div class="control-row"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys</span><span>Move</span></div><div class="control-row"><span>Mouse / drag</span><span>Look around</span></div><div class="control-row"><span><kbd>Shift</kbd></span><span>Walk faster</span></div><div class="control-row"><span><kbd>E</kbd></span><span>Discover a detail</span></div><div class="control-row"><span><kbd>Esc</kbd></span><span>Pause</span></div><p>Find five thoughtful details around the lobby. Get close to an object and press E to discover its story.</p><p class="touch-note">On touch screens, use the left stick to move and drag the right side to look. Tap a discovery prompt to interact.</p></dialog>
     <aside id="detail-card" class="detail-card hidden"><button id="close-detail" aria-label="Close detail">×</button><div id="detail-kicker" class="eyebrow">A MERIDIAN DETAIL</div><h2 id="detail-title"></h2><p id="detail-description"></p><span id="detail-progress"></span></aside>
     <div id="toast" class="toast hidden" role="status"></div>

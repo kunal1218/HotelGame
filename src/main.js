@@ -3,6 +3,8 @@ import { ApartmentEngine } from './engine.js';
 import { createCity } from './city.js';
 import { createLobby } from './lobby.js';
 import './style.css';
+import { createSessionUi } from './net/sessionUi.js';
+let session;
 
 const $ = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
@@ -81,8 +83,7 @@ function interact(){
   $('detail-kicker').textContent=first?'A NEW MERIDIAN DISCOVERY':'A FAVOURITE CORNER';
   updateProgress();show('detail-card');clearTimeout(detailTimeout);
   detailTimeout=setTimeout(()=>hide('detail-card'),11000);
-  const result=lobby.interact?.(closest.id);
-  if(typeof result==='string')toast(result);
+  if(['fireplace','elevators'].includes(closest.id))session.request('toggle',closest.id==='fireplace'?1:2).then(result=>{if(!result.ok)toast(result.reason==='too_far'?'Move a little closer.':'Could not change that right now.');});
   if(first&&discovered.size===lobby.interactables.length)setTimeout(()=>toast('Five details. One place to call home. Keep exploring.'),900);
 }
 
@@ -107,9 +108,8 @@ function updateProximity(){
 }
 
 function bindControls(){
-  $('start-button').addEventListener('click',startExploring);
   $('resume-button').addEventListener('click',startExploring);
-  $('reset-button').addEventListener('click',()=>{engine.controller.reset();hide('detail-card');startExploring();});
+  $('reset-button').addEventListener('click',async()=>{const result=await session.request('return_to_entrance');if(result.ok){hide('detail-card');startExploring();}else toast('The entrance is occupied. Try again shortly.');});
   document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();if(started)pause();});
   $('audio-toggle').addEventListener('click',toggleAudio);
   $('time-toggle').addEventListener('click',()=>{
@@ -150,12 +150,16 @@ async function init(){
   try {
     engine=new ApartmentEngine($('scene'));
     city=createCity(THREE,engine.scene);lobby=createLobby(THREE,engine.scene);
-    engine.controller.colliders=lobby.colliders;
     if(city.update)engine.updaters.push(city.update);if(lobby.update)engine.updaters.push(lobby.update);
     bindControls();
+    session=createSessionUi({engine,lobby,toast,onJoined:startExploring,onLeft:()=>{
+      started=false;paused=false;engine.controller.setActive(false);
+      document.body.classList.remove('playing');show('welcome');hide('pause-panel');hide('crosshair');hide('explore-hud');hide('interaction');hide('mobile-controls');hide('detail-card');
+    }});
     let frameCount=0,fpsTimer=0,uiTimer=0,baseYaw=engine.camera.rotation.y;
     let qualitySamples=0,qualityTime=0,adapted=false;
     engine.start((dt,time)=>{
+      session.frame();
       frameCount++;fpsTimer+=dt;uiTimer+=dt;
       if(!started&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
         engine.camera.rotation.y=baseYaw+Math.sin(time*.085)*.028;
@@ -174,7 +178,7 @@ async function init(){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       $('loader').style.opacity='0';setTimeout(()=>hide('loader'),700);
     }));
-    addEventListener('pagehide',event=>{if(!event.persisted)engine.dispose();});
+    addEventListener('pagehide',event=>{if(!event.persisted){session.dispose();engine.dispose();}});
   } catch(error) {
     console.error('Meridian initialization failed:',error);hide('loader');show('error');
   }

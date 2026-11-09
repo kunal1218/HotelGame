@@ -1,0 +1,19 @@
+// @ts-check
+export const TICK_HZ = 60;
+export const SNAPSHOT_EVERY = 2,
+  INPUT_SEND_EVERY = 2;
+export const MAX_PLAYERS = 5,
+  MAX_ROOMS = 50;
+export const WALK_SPEED = 2.6,
+  SPRINT_SPEED = 4.4,
+  PLAYER_RADIUS = 0.32;
+export const SEPARATE_SPEED = 1.5,
+  SQUEEZE_AFTER_MS = 1500;
+export const INTERP_MIN_MS = 1000 / 15,
+  INTERP_MAX_MS = 250,
+  EXTRAP_MAX_MS = 100;
+export const HELLO_TIMEOUT_MS = 5000,
+  ROOM_IDLE_CLOSE_MS = 60000;
+export const MAX_MESSAGE_BYTES = 16 * 1024;
+export const BACKPRESSURE_SKIP_BYTES = 64 * 1024,
+  BACKPRESSURE_CLOSE_BYTES = 1024 * 1024;

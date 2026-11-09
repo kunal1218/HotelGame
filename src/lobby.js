@@ -1,7 +1,8 @@
+import { MAP, Level } from './shared/sim/map.js';
 /** A procedural apartment lobby. Dimensions are metres; +Y is up. */
 export function createLobby(THREE, scene) {
   const root = new THREE.Group(); root.name = 'Meridian · lobby'; scene.add(root);
-  const colliders = [], interactables = [], flames = [], elevatorDoors = [];
+  const colliders = MAP[Level.LOBBY].colliders, interactables = [], flames = [], elevatorDoors = [];
   let fireOn = true, elevatorOpen = false, elevatorProgress = 0;
   const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
   const cylinderGeometry = new THREE.CylinderGeometry(1, 1, 1, 24);
@@ -34,7 +35,6 @@ export function createLobby(THREE, scene) {
     else mesh = new THREE.Mesh(new THREE.CylinderGeometry(topRadius, radius, height, 24), material);
     mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true; parent.add(mesh); return mesh;
   }
-  const collider = (x, z, w, d) => colliders.push({ minX: x-w/2, maxX: x+w/2, minZ: z-d/2, maxZ: z+d/2 });
   const marker = (id, label, description, x, y, z, radius = 3) => interactables.push({ id, label, description, position: new THREE.Vector3(x, y, z), radius });
   let seed = 1973;
   function random() { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }
@@ -76,10 +76,10 @@ export function createLobby(THREE, scene) {
   // Architecture: a travertine plinth, generous glazing, and a timber coffered ceiling.
   box(0,-.12,0,28,.24,28,floorMaterial,false);
   box(0,7.24,0,28,.25,28,plaster,false);
-  box(0,3.6,-14,28,7.2,.28,plaster,false); collider(0,-14,28,.3);
-  box(14,3.6,0,.28,7.2,28,warm,false); collider(14,0,.28,28);
-  box(-14,.17,0,.3,.34,28,cream,false); collider(-14,0,.3,28);
-  box(0,.16,14,28,.32,.28,cream,false); collider(0,14,28,.3);
+  box(0,3.6,-14,28,7.2,.28,plaster,false);
+  box(14,3.6,0,.28,7.2,28,warm,false);
+  box(-14,.17,0,.3,.34,28,cream,false);
+  box(0,.16,14,28,.32,.28,cream,false);
   // Window posts are intentionally slender so the skyline remains visible.
   for (let z=-14;z<=14;z+=4) {
     box(-13.88,3.55,z,.11,7.1,.1,bronze,false);
@@ -97,7 +97,7 @@ export function createLobby(THREE, scene) {
   for(let z=-12;z<=12;z+=3) box(0,7.03,z,27.7,.3,.14,oak,false);
   // Structural piers with refined brass skirting.
   for(const [x,z] of [[-12,-9],[-12,7],[11.5,-10],[11.5,8]]) {
-    box(x,3.6,z,.65,7.2,.65,cream);box(x,.12,z,.7,.24,.7,bronze);collider(x,z,.7,.7);
+    box(x,3.6,z,.65,7.2,.65,cream);box(x,.12,z,.7,.24,.7,bronze);
   }
   box(0,.06,-10.9,27.5,.015,.025,bronze,false);
   box(-2.5,.06,0,.025,.015,28,bronze,false);
@@ -137,13 +137,12 @@ export function createLobby(THREE, scene) {
     rounded(-w/2+.1,.84,0,.25,.67,1.5,material,.1,g);rounded(w/2-.1,.84,0,.25,.67,1.5,material,.1,g);
     for(const xx of [-w/2+.3,w/2-.3]) for(const zz of [-.5,.5]) cylinder(xx,.17,zz,.045,.32,bronze,g);
     for(const xx of [-w*.28,w*.27]){ const c=rounded(xx,1.0,.25,.66,.59,.19,ivoryFabric,.14,g);c.rotation.z=xx<0?.12:-.1;c.rotation.x=-.12; }
-    if(Math.abs(Math.sin(rotation))>.5) collider(x,z,1.75,w+.15);else collider(x,z,w+.15,1.75);
   }
   sofa(-7.3,.3,0);sofa(-11,-3.3,-Math.PI/2,fabric,3.6);
   sofa(-4.35,-4.8,Math.PI/2,ivoryFabric,1.2);
   sofa(-5.1,-6.3,Math.PI*.8,ivoryFabric,1.2);
   const coffee=rounded(-7.5,.48,-3.1,3.55,.12,1.75,cream,.8);coffee.rotation.y=.1;
-  cylinder(-8.35,.24,-3.1,.4,.45,oak);cylinder(-6.7,.24,-3.1,.4,.45,oak);collider(-7.5,-3.1,3.7,1.9);
+  cylinder(-8.35,.24,-3.1,.4,.45,oak);cylinder(-6.7,.24,-3.1,.4,.45,oak);
   // Books, a shallow bowl, and a hand-thrown ceramic vase.
   box(-8.2,.575,-3.3,.8,.075,.58,terracotta);const book=box(-8.1,.65,-3.24,.76,.065,.52,cream);book.rotation.y=.13;
   box(-8.1,.688,-3.24,.64,.008,.49,oak,false);
@@ -151,13 +150,13 @@ export function createLobby(THREE, scene) {
   vase(-7.4,.56,-3.45,.32,ceramic);
   marker('lounge','The residents’ lounge','A place for slow mornings and good conversation. Olive upholstery, hand-thrown ceramics, and a collection of art and architecture books.',-7.4,1,-2,3.5);
   // Side tables and a linen-shaded reading lamp.
-  cylinder(-4.55,.4,-.15,.54,.08,oak);cylinder(-4.55,.2,-.15,.18,.4,black);collider(-4.55,-.15,1.1,1.1);
+  cylinder(-4.55,.4,-.15,.54,.08,oak);cylinder(-4.55,.2,-.15,.18,.4,black);
   vase(-4.55,.46,-.15,.42,terracotta);
   cylinder(-10.1,.05,.6,.35,.09,bronze);cylinder(-10.1,1.2,.6,.03,2.3,bronze);
   cylinder(-10.1,2.35,.6,.49,.5,ivoryFabric,root,.32);cylinder(-10.1,2.08,.6,.34,.015,glow);
 
   // Reception: green stone, fine timber fins, and an illuminated welcome.
-  rounded(7.15,.69,-8.9,6.4,1.35,1.65,oak,.15);collider(7.15,-8.9,6.6,1.9);
+  rounded(7.15,.69,-8.9,6.4,1.35,1.65,oak,.15);
   for(let x=4.1;x<10.3;x+=.16) box(x,.7,-7.99,.055,1.26,.07,oakEdge,false);
   rounded(7.15,1.41,-8.9,6.65,.12,1.83,darkStone,.16);
   box(7.15,.13,-7.98,6.2,.045,.03,glow,false);
@@ -208,10 +207,10 @@ export function createLobby(THREE, scene) {
   }
   // Fireplace mantel sculpture: a soft stone loop.
   const loop=new THREE.Mesh(new THREE.TorusGeometry(.42,.12,12,40),ceramic);loop.rotation.y=Math.PI/2;loop.position.set(13,3.25,-.3);root.add(loop);
-  box(13,2.85,-.3,.42,.08,1.15,bronze);collider(13,0,1.4,19);
+  box(13,2.85,-.3,.42,.08,1.15,bronze);
   // Two accent chairs create a second, smaller conversation nook.
   sofa(8.3,1.7,-Math.PI/2,ivoryFabric,1.35);sofa(8.3,-2.3,-Math.PI/2,ivoryFabric,1.35);
-  cylinder(10.15,.54,-.35,.7,.1,darkStone);cylinder(10.15,.27,-.35,.25,.52,bronze);collider(10.15,-.35,1.4,1.4);
+  cylinder(10.15,.54,-.35,.7,.1,darkStone);cylinder(10.15,.27,-.35,.25,.52,bronze);
   box(10.15,.635,-.35,.55,.065,.4,terracotta);
 
   // Pendant group: floating brass halos with a warm luminous underside.
@@ -234,7 +233,7 @@ export function createLobby(THREE, scene) {
   }
   const leafGeometry=new THREE.SphereGeometry(1,10,6);
   function plant(x,z,height=2.8,radius=.48) {
-    cylinder(x,.35,z,radius,.7,ceramic,root,radius*.82);cylinder(x,.7,z,radius*.77,.015,mat('soil','#333226',1));collider(x,z,radius*2,radius*2);
+    cylinder(x,.35,z,radius,.7,ceramic,root,radius*.82);cylinder(x,.7,z,radius*.77,.015,mat('soil','#333226',1));
     const positions=[], scales=[], rotations=[];
     for(let branch=0;branch<6;branch++) {
       const a=branch*Math.PI*2/6+random()*.5, spread=.35+random()*.55, y=.7+(height-.7)*(.65+random()*.35);
@@ -268,6 +267,10 @@ export function createLobby(THREE, scene) {
   root.traverse(object => { if(object.isMesh && !object.name) object.name='Lobby detail'; });
   return {
     group: root, colliders, interactables,
+    setSharedState(state) {
+      fireOn=state.fireOn;elevatorOpen=state.elevatorOpen;
+      for(const f of flames)f.mesh.visible=fireOn;
+    },
     interact(id) {
       if(id==='fireplace') {
         fireOn=!fireOn;for(const f of flames)f.mesh.visible=fireOn;
